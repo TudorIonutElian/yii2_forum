@@ -1,0 +1,113 @@
+/* -------------- Style for forum -------------- */
+.numar_categorii,
+.numar_subiecte,
+.numar_postari{
+    display: flex;
+    flex-direction: row;
+}
+.numar_categorii__numar,
+.numar_subiecte__numar,
+.numar_postari__numar{
+    margin: 0 5px;
+}
+.numar_subiecte,
+.numar_mesaje{
+    display: flex;
+    flex-direction: row;
+}
+.numar_subiecte__numar,
+.numar_mesaje__numar{
+    margin: 0 5px;
+}
+.forum_no_subiecte{
+    background-color: #e74c3c;
+    color: #fff;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+div[class$="__numar"]{
+    background-color: #138496;
+    color: #fff;
+    border-radius: 50%;
+    min-height: 30px;
+    min-width: 30px;
+    margin-bottom: 2px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.forum_added_by,
+.categorie_added_by{
+    font-weight: bold;
+    background-color: #138496;
+    color: #fff;
+    padding: 3px 4px;
+    border-radius: 3px;
+}
+div span.already_subscribed{
+    padding: 5px;
+    background-color: #2ecc71;
+    color: #fff;
+    margin-bottom: 6px;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+div span.subscribe_to_subiect{
+    padding: 5px;
+    background-color: #e67e22;
+    color: #fff;
+    margin-bottom: 6px;
+    display: inline-block;
+    border-radius: 4px;
+}
+.new_subscription{
+    margin-bottom: 10px;
+}
+
+/* -------------- Style for postare -------------- */
+.postare_user{
+
+}
+.postare_bar{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.postare_bar__position{
+    padding: 5px;
+    border-radius: 3px;
+    background-color: #3498db;
+    color: #fff;
+}
+.postare_user_data{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+}
+.postare_user{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-items: center;
+}
+.quotedText{
+    padding-left: 20px;
+    padding-right: 20px;
+    font-style: italic;
+    color: #2e86de;
+    text-align: justify;
+}
+.left_quote,
+.right_quote{
+    font-size: 30px;
+}
