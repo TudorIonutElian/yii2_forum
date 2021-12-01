@@ -6,6 +6,8 @@ use app\models\Categorie;
 use app\models\CategorieSearch;
 use app\models\Forum;
 use app\models\ForumSearch;
+use app\models\ForumVizualizari;
+use Yii;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -140,6 +142,9 @@ class ForumController extends Controller
     }
 
     public function actionViewCategorii($id_forum){
+        // adaugare vizualizare in tabelul forum_vizualizari
+        $this->adaugaVizualizare($id_forum);
+
         $query = Categorie::find()->where(['forum_id' => $id_forum]);
         $searchModel = new CategorieSearch();
 
@@ -171,5 +176,13 @@ class ForumController extends Controller
         }
 
         return $categorii_ids;
+    }
+
+    public function adaugaVizualizare($forum_id){
+        $viualizare = new ForumVizualizari();
+        $viualizare->forum_id = (int) $forum_id;
+        $viualizare->ip       = Yii::$app->request->getUserIP();
+
+        $viualizare->save();
     }
 }

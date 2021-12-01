@@ -53,7 +53,7 @@ class ForumAbonament extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getAbSubiect()
+    public function getSubiect()
     {
         return $this->hasOne(Subiect::className(), ['id' => 'ab_subiect_id']);
     }

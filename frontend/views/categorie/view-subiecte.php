@@ -1,12 +1,14 @@
 <?php
 
+use app\models\ForumAbonament;
+use app\models\ForumVizualizari;
 use app\models\Postare;
 use yii\grid\GridView;
 use yii\helpers\Html;
 
 /** @var TYPE_NAME $dataProvider */
 /** @var TYPE_NAME $searchModel */
-/** @var Object $model */
+/** @var mixed $model */
 
 $this->title = $model->titlu;
 $this->params['breadcrumbs'][] = ['label' =>'Forumuri', 'url' => ['forum/index']];
@@ -14,7 +16,9 @@ $this->params['breadcrumbs'][] = ['label' =>'Categorii', 'url' => ['categorie/in
 $this->params['breadcrumbs'][] = ['label' => $this->title];
 
 ?>
-
+<p>
+    <?= Html::a('Adauga subiect nou', ['subiect/create', 'id_categorie' => $model->id], ['class' => 'btn btn-success']) ?>
+</p>
 
 <?=
 
@@ -45,10 +49,22 @@ GridView::widget([
             }
         ],
         [
+            'label' => 'Vizualizari',
+            'value' => function($model){
+                return ForumVizualizari::find()->where(['subiect_id' => $model->id])->count();
+            }
+        ],
+        [
             'label' => 'Numar mesaje',
             'format' => 'raw',
             'value' => function($model){
                 return Postare::find()->where(['subiect_id' => $model->id])->count();
+            }
+        ],
+        [
+            'label' => 'Abonamente',
+            'value' => function($model){
+                return ForumAbonament::find()->where(['ab_subiect_id' => $model->id])->count();
             }
         ]
 

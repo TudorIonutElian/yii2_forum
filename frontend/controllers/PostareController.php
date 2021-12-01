@@ -177,4 +177,14 @@ class PostareController extends Controller
         $len = strpos($string,$end,$ini) - $ini;
         return substr($string,$ini,$len);
     }
+
+    public static function getIdSubiecte($subiecte){
+        $subiecte_ids   = [];
+
+        foreach ($subiecte as $subiect){
+            array_push($subiecte_ids, $subiect["id"]);
+        }
+
+        return $subiecte_ids;
+    }
 }

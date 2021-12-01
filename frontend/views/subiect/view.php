@@ -1,6 +1,9 @@
 <?php
 
+use app\models\Categorie;
+use app\models\Forum;
 use app\models\ForumDocumente;
+use app\models\Subiect;
 use frontend\controllers\PostareController;
 use frontend\controllers\SubiectController;
 use frontend\models\RaspunsSubiectForm;
@@ -8,7 +11,6 @@ use kartik\file\FileInput;
 use yii\grid\GridView;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
-use yii\widgets\DetailView;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Subiect */
@@ -16,9 +18,15 @@ use yii\widgets\DetailView;
 /** @var object $searchModel */
 /** @var boolean $subscription */
 
+$subiect_categorie = Subiect::findOne($model->id)->categorie_id;
+$categorie_forum   = Categorie::findOne($subiect_categorie);
+$forum             = Forum::findOne($categorie_forum->forum_id);
+
+
 $this->title = $model->titlu;
-$this->params['breadcrumbs'][] = ['label' => 'Subiecte', 'url' => ['index']];
-$this->params['breadcrumbs'][] = $this->title;
+$this->params['breadcrumbs'][] = ['label' => 'Forumuri', 'url' => ['forum/index']];
+$this->params['breadcrumbs'][] = ['label' => $forum->titlu, 'url' => ['forum/view-categorii', 'id_forum' => $forum->id]];
+$this->params['breadcrumbs'][] = ['label' => $categorie_forum->titlu, 'url' => ['categorie/view-subiecte', 'id_categorie' => $categorie_forum->id]];
 \yii\web\YiiAsset::register($this);
 
 ?>

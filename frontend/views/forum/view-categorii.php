@@ -1,8 +1,11 @@
 <?php
 
 use app\models\Categorie;
+use app\models\ForumVizualizari;
+use app\models\Postare;
 use app\models\Subiect;
 use frontend\controllers\CategorieController;
+use frontend\controllers\PostareController;
 use frontend\controllers\SubiectController;
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -10,12 +13,17 @@ use yii\helpers\Html;
 /** @var TYPE_NAME $dataProvider */
 /** @var TYPE_NAME $searchModel */
 
+/** @var mixed $model */
 $this->title = $model->titlu;
 $this->params['breadcrumbs'][] = ['label' =>'Forumuri', 'url' => ['forum/index']];
-$this->params['breadcrumbs'][] = ['label' => $model->titlu];
+$this->params['breadcrumbs'][] = ['label' => $this->title];
 
 ?>
 
+
+<p>
+    <?= Html::a('Adauga categorie noua', ['categorie/create', 'forum_id' => $model->id], ['class' => 'btn btn-success']) ?>
+</p>
 
 <?=
 
@@ -55,7 +63,11 @@ GridView::widget([
                 ],
             ],
             'value' => function($model){
-                $numar_subiecte  = Subiect::find()->where(['categorie_id' => $model->id])->count();
+                $subiecte           = Subiect::find()->where(['categorie_id' => $model->id])->select('id')->all();
+                $numar_subiecte     = Subiect::find()->where(['categorie_id' => $model->id])->count();
+                $subiecte_ids       = PostareController::getIdSubiecte($subiecte);
+                $numar_mesaje       = Postare::find()->where(['in', 'subiect_id', $subiecte_ids])->count();
+
 
                 return '
                                 <div>
@@ -64,11 +76,17 @@ GridView::widget([
                                         <div class="numar_subiecte__text">Subiecte</div>
                                     </div>  
                                     <div class="numar_mesaje">
-                                        <div class="numar_mesaje__numar"> '.$numar_subiecte.' </div>
+                                        <div class="numar_mesaje__numar"> '.$numar_mesaje.' </div>
                                         <div class="numar_mesaje__text">Mesaje</div>
                                     </div>                                    
                                 </div>
                             ';
+            }
+        ],
+        [
+            'label' => 'Vizualizari',
+            'value' => function($model){
+                return ForumVizualizari::find()->where(['categorie_id' => $model->id])->count();
             }
         ],
         [

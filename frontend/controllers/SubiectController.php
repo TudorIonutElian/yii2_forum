@@ -2,8 +2,10 @@
 
 namespace frontend\controllers;
 
+use app\models\Forum;
 use app\models\ForumAbonament;
 use app\models\ForumDocumente;
+use app\models\ForumVizualizari;
 use app\models\Postare;
 use app\models\PostareSearch;
 use app\models\Subiect;
@@ -11,6 +13,7 @@ use app\models\SubiectSearch;
 use frontend\models\RaspunsSubiectForm;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\helpers\Html;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -62,69 +65,79 @@ class SubiectController extends Controller
      */
     public function actionView($id)
     {
-        $model = new RaspunsSubiectForm();
-        if(\Yii::$app->request->isPost){
+        if(!\Yii::$app->user->getIsGuest()){
+            $model = new RaspunsSubiectForm();
+            if(\Yii::$app->request->isPost){
 
-            $request = Yii::$app->request;
+                $request = Yii::$app->request;
 
-            $postare = new Postare();
-            $postare->subiect_id = (int)$id;
+                $postare = new Postare();
+                $postare->subiect_id = (int)$id;
 
-            $form = $request->getBodyParam("RaspunsSubiectForm");
-            $postare->continut = $form["raspuns"];
-            $postare->creat_de = Yii::$app->user->identity->id;
-            $postare->position = Postare::find()->where(['subiect_id' => $id])->max('position') + 1;
+                $form = $request->getBodyParam("RaspunsSubiectForm");
+                $postare->continut = $form["raspuns"];
+                $postare->creat_de = Yii::$app->user->identity->id;
+                $postare->position = Postare::find()->where(['subiect_id' => $id])->max('position') + 1;
 
-            if($postare->save()){
-                $documente = UploadedFile::getInstances($model, 'document');
-                if($documente != null){
-                    $model->document = UploadedFile::getInstances($model, 'document');
-                    foreach ($model->document as $document) {
-                        $time = time();
-                        $file_name_final = strtolower($document->baseName . $time);
-                        $document->saveAs('forum_documente/' . $file_name_final. '.' . $document->extension);
+                if($postare->save()){
+                    $documente = UploadedFile::getInstances($model, 'document');
+                    if($documente != null){
+                        $model->document = UploadedFile::getInstances($model, 'document');
+                        foreach ($model->document as $document) {
+                            $time = time();
+                            $file_name_final = strtolower($document->baseName . $time);
+                            $document->saveAs('forum_documente/' . $file_name_final. '.' . $document->extension);
 
-                        // salvare titlu documente in baza de date
-                        $forum_documente = new ForumDocumente();
-                        $forum_documente->postare_id = $postare->id;
-                        $forum_documente->file_name  = $file_name_final.'.' . $document->extension;
-                        $forum_documente->validate();
-                        $forum_documente->save();
+                            // salvare titlu documente in baza de date
+                            $forum_documente = new ForumDocumente();
+                            $forum_documente->postare_id = $postare->id;
+                            $forum_documente->file_name  = $file_name_final.'.' . $document->extension;
+                            $forum_documente->validate();
+                            $forum_documente->save();
+                        }
                     }
+
+                    // verificare daca userul s-a abonat
+                    if(isset($form["abonament"])){
+                        $abonament = (int) $form["abonament"];
+                        $this->adaugaAbonament($abonament, $id);
+                    }
+
+                    // trimitere email utilizatorilor daca exista abonamente
+                    // preluare abonamente
+                    $abonamente = ForumAbonament::find()->where(['ab_subiect_id' =>(int) $id])->select('ab_email')->all();
+                    if($abonamente != null && count($abonamente) > 0){
+                        $this->notificareMesajNou($abonamente);
+                    }
+
+
+
                 }
-
-                // verificare daca userul s-a abonat
-                if(isset($form["abonament"])){
-                    $abonament = (int) $form["abonament"];
-                    $this->adaugaAbonament($abonament, $id);
-                }
-
-                // trimitere email utilizatorilor daca exista abonamente
-                $this->notificareMesajNou();
-
+                return $this->redirect(['subiect/view', 'id' => $id]);
 
             }
-            return $this->redirect(['subiect/view', 'id' => $id]);
 
+            // REQUEST IS GET HERE
+            $this->adaugaVizualizare($id);
+            
+            $query = Postare::find()->where(['subiect_id' => $id])->orderBy('position');
+            $provider = new ActiveDataProvider([
+                'query' => $query,
+                'pagination' => [
+                    'pageSize' => 10,
+                ],
+            ]);
+
+            $userHasSubscriptionResult = $this->checkAbonament($id, Yii::$app->user->identity);
+            //verificare daca userul este abonat
+
+            return $this->render('view', [
+                'model' => $this->findModel($id),
+                'dataProvider' => $provider,
+                'subscription'  => $userHasSubscriptionResult
+            ]);
         }
-
-        // REQUEST IS GET HERE
-        $query = Postare::find()->where(['subiect_id' => $id])->orderBy('position');
-        $provider = new ActiveDataProvider([
-            'query' => $query,
-            'pagination' => [
-                'pageSize' => 10,
-            ],
-        ]);
-
-        $userHasSubscriptionResult = $this->checkAbonament($id, Yii::$app->user->identity);
-        //verificare daca userul este abonat
-
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-            'dataProvider' => $provider,
-            'subscription'  => $userHasSubscriptionResult
-        ]);
+        return $this->redirect(['forum/index']);
     }
 
     /**
@@ -132,14 +145,21 @@ class SubiectController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
+    public function actionCreate($id_categorie)
     {
         $model = new Subiect();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
+            $subiectData = $this->request->getBodyParam("Subiect");
+
+            $subiect = new Subiect();
+            $subiect->categorie_id = (int) $id_categorie;
+            $subiect->titlu = $subiectData["titlu"];
+            $subiect->descriere = $subiectData["descriere"];
+            $subiect->creat_de = Yii::$app->user->identity->id;
+            $subiect->save();
+
+            return $this->redirect(['categorie/view-subiecte', 'id_categorie' => $id_categorie]);
         } else {
             $model->loadDefaultValues();
         }
@@ -251,7 +271,7 @@ class SubiectController extends Controller
             echo
             '<div class="=subscription">
                   <span class="already_subscribed">Sunteti abonat la subiect.</span><br>
-                  <span>Daca doriti sa va dezabonati de la acest subiect sau oricare altul, o puteti face  din contul dvs.</span>
+                  <span>Daca doriti sa va dezabonati de la acest subiect sau oricare altul, o puteti face de <span>'.Html::a('aici', ['forum-abonament/index']).'</span>.</span>
             </div>';
         }else{
             echo
@@ -265,15 +285,26 @@ class SubiectController extends Controller
     }
 
     // trimitere email
-    public function notificareMesajNou(){
-        return Yii::$app
-            ->mailer
-            ->compose(
-                ['html' => 'notificareMesajNou-html', 'text' => 'notificareMesajNou-text']
-            )
-            ->setFrom('no-reply@app.com')
-            ->setTo('ionuteliantudor@gmail.com')
-            ->setSubject('Mesaj nou la subiectul 1')
-            ->send();
+    public function notificareMesajNou($abonamente){
+        foreach ($abonamente as $abonament){
+            Yii::$app
+                ->mailer
+                ->compose(
+                    ['html' => 'notificareMesajNou-html', 'text' => 'notificareMesajNou-text']
+                )
+                ->setFrom('no-reply@app.com')
+                ->setTo($abonament->ab_email)
+                ->setSubject('Mesaj nou la subiectul 1')
+                ->send();
+        }
+    }
+
+    public function adaugaVizualizare($id)
+    {
+        $viualizare = new ForumVizualizari();
+        $viualizare->subiect_id = (int) $id;
+        $viualizare->ip       = Yii::$app->request->getUserIP();
+
+        $viualizare->save();
     }
 }

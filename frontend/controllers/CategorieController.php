@@ -4,7 +4,9 @@ namespace frontend\controllers;
 
 use app\models\Categorie;
 use app\models\CategorieSearch;
+use app\models\ForumVizualizari;
 use app\models\Subiect;
+use Yii;
 use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -66,14 +68,21 @@ class CategorieController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
+    public function actionCreate($forum_id)
     {
         $model = new Categorie();
-
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
+            $request = $this->request->post();
+            $categorieData = $this->request->getBodyParam("Categorie");
+
+            $categorie = new Categorie();
+            $categorie->forum_id = (int) $forum_id;
+            $categorie->titlu = $categorieData["titlu"];
+            $categorie->descriere = $categorieData["descriere"];
+            $categorie->creat_de = Yii::$app->user->identity->id;
+            $categorie->save();
+
+            return $this->redirect(['forum/view-categorii', 'id_forum' => $forum_id]);
         } else {
             $model->loadDefaultValues();
         }
@@ -135,6 +144,9 @@ class CategorieController extends Controller
 
 
     public function actionViewSubiecte($id_categorie){
+        // adaugare vizualizare in tabelul forum_vizualizari
+        $this->adaugaVizualizare($id_categorie);
+
         $query = Subiect::find()->where(['categorie_id' => $id_categorie]);
         $searchModel = new CategorieSearch();
 
@@ -165,5 +177,14 @@ class CategorieController extends Controller
         }
 
         return $subiecte_ids;
+    }
+
+    // adauga vizualizare noua in tabelul forum_vizualizari
+    public function adaugaVizualizare($categorie_id){
+        $viualizare = new ForumVizualizari();
+        $viualizare->categorie_id = (int) $categorie_id;
+        $viualizare->ip       = Yii::$app->request->getUserIP();
+
+        $viualizare->save();
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use app\models\Categorie;
+use app\models\ForumVizualizari;
 use app\models\Subiect;
 use frontend\controllers\CategorieController;
 use frontend\controllers\ForumController;
@@ -20,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>
-        <?= Html::a('Create Forum', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Adauga forum nou', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
@@ -35,6 +36,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'attribute' => 'titlu',
                     'contentOptions' => [
                         'style' => [
+                            'width' => '20%',
                             'text-align' => 'center'
                         ],
                     ],
@@ -43,7 +45,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         return Html::a($model->titlu, ['forum/view-categorii', 'id_forum' => $model->id]);
                     }
             ],
-            'descriere',
+            [
+                    'label' => 'Descriere',
+                    'attribute' => 'descriere',
+                    'value' => 'descriere',
+                    'contentOptions' => [
+                        'style' => [
+                            'width' => '25%',
+                            'text-align' => 'center'
+                        ],
+                    ],
+            ],
             [
                 'label' => 'Creat de',
                 'format' => 'raw',
@@ -67,7 +79,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'format' => 'raw',
                     'contentOptions' => [
                         'style' => [
-                            'width' => '20%',
+                            'width' => '15%',
                             'vertical-align' => 'middle'
                         ],
                     ],
@@ -104,11 +116,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
             ],
             [
+                    'label' => 'Vizualizari',
+                    'value' => function($model){
+                        return ForumVizualizari::find()->where(['forum_id' => $model->id])->count();
+                    }
+            ],
+            [
                     'label' => 'Ultimul subiect',
                     'format' => 'raw',
                     'contentOptions' => [
                         'style' => [
-                            'width' => '20%',
+                            'width' => '15%',
                             'vertical-align' => 'middle'
                         ],
                     ],
